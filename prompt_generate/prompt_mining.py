@@ -9,9 +9,6 @@ from solr_request import update_data, query_data, MultiSolrReqeust
 import csv
 import os
 
-
-# nltk.download("words", download_dir="./data/nltk")
-# words = set(nltk.corpus.words.words())
 FB60K_NYT10_RELATIONS = [
     '/people/person/nationality',
     '/location/location/contains',
