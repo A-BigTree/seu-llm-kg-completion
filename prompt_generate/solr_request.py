@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 # Solr请求地址
 SOLR_HOST = "http://localhost:8983/solr/"
+# Solr测试核心
 DATASET_CORE_TEST = "wiki_solr"
 # Solr请求核心列表
 DATASET_CORE_LIST = ["wiki0", "wiki1", "wiki2", "wiki3", "wiki4"]
@@ -78,7 +79,7 @@ class MultiSolrReqeust(object):
                 docs, index = self.queue.get(timeout=60)
                 update_data(docs, index)
                 # update_data_test(docs)
-            except Exception as e:
+            except Exception:
                 break
 
     def run_init(self):
@@ -121,11 +122,4 @@ class MultiSolrReqeust(object):
 
 
 if __name__ == '__main__':
-    query = {
-        "q": f"value:(+\"takenori kanzaki\" +\"japan\")",
-        "fl": "value",
-        "start": 0,
-        "rows": 100
-    }
-    task = MultiSolrReqeust()
-    print(task.run_query(query))
+    pass
