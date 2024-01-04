@@ -1,5 +1,6 @@
 import gc
 import random
+import re
 
 from datasets import load_dataset, load_from_disk
 from enum import Enum
@@ -174,7 +175,7 @@ def get_entity_tokens(dataset: DataSet) -> dict:
     return result
 
 
-def get_triple_text_from_corpus(triple: str, relation: str, dataset: DataSet, max_lines: int = 10000):
+def get_triple_text_from_corpus(triple: str, relation: str, dataset: DataSet, max_lines: int = 50000):
     lines = triple.split("\n")
     relation_ = relation.replace("/", "_")
     path = f"./data/datasets/mine_text/{dataset.value}/mined_text{relation_}.txt"
@@ -185,7 +186,7 @@ def get_triple_text_from_corpus(triple: str, relation: str, dataset: DataSet, ma
 
     task = MultiSolrReqeust()
 
-    for line in lines:
+    for line in tqdm(lines):
         if num_lines >= max_lines:
             break
         line = line.replace("\n", "").strip()
@@ -193,11 +194,8 @@ def get_triple_text_from_corpus(triple: str, relation: str, dataset: DataSet, ma
             continue
         head = line.split("\t")[0].replace("_", " ").strip()
         tail = line.split("\t")[2].replace("_", " ").strip()
-        print("=======================")
-        print(f"Head: {head}. Tail: {tail}")
-        print("=======================")
         query = {
-            "q": f"value:+\"{head}\" +\"{tail}\"",
+            "q": f"value:(+\"{head}\" +\"{tail}\")",
             "fl": "value",
             "start": 0,
             "rows": 100
@@ -205,15 +203,16 @@ def get_triple_text_from_corpus(triple: str, relation: str, dataset: DataSet, ma
         results = task.run_query(query)
         res = ""
         for result in results:
-            for doc in result["value"].split("\n"):
-                doc = doc.replace("\n", "").strip()
-                if len(doc) == 0:
-                    continue
-                if head in doc and tail in doc:
-                    res += doc + "\n"
-                    num_lines += 1
-        print(res, file=file)
-        print(f'Currently mined {num_lines} sentences')
+            if len(result["value"].replace("\n", "").strip()) == 0:
+                continue
+            doc = result["value"].replace("\n", " ").strip().lower()
+            doc = re.sub(r"\b%s\b" % head, "[X]", doc)
+            doc = re.sub(r"\b%s\b" % tail, "[Y]", doc)
+            res += doc + "\n"
+            num_lines += 1
+        if len(res) > 0:
+            print(res, file=file)
+    print(f'Sum mined {num_lines} sentences')
 
 
 def mine_text_from_corpus(dataset: DataSet):

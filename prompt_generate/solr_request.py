@@ -112,7 +112,7 @@ class MultiSolrReqeust(object):
             c_t = threading.Thread(target=self.__consume_query)
             c_t.start()
             c_ts.append(c_t)
-        for t in tqdm(c_ts):
+        for t in c_ts:
             t.join()
         result = []
         while not self.result_queue.empty():
@@ -121,4 +121,11 @@ class MultiSolrReqeust(object):
 
 
 if __name__ == '__main__':
-    pass
+    query = {
+        "q": f"value:(+\"takenori kanzaki\" +\"japan\")",
+        "fl": "value",
+        "start": 0,
+        "rows": 100
+    }
+    task = MultiSolrReqeust()
+    print(task.run_query(query))
