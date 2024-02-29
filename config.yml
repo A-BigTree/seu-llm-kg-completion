@@ -1,0 +1,33 @@
+# Configuration file for the application
+
+# Datasets configuration
+datasets:
+  type: FB60K-NYT10
+  path: ./data/datasets
+
+# Solr configuration
+solr:
+  host: http://localhost:8983/solr
+  cores:
+    - wiki0
+    - wiki1
+    - wiki2
+    - wiki3
+    - wiki4
+  # Initial data configuration
+  update:
+    data-dir: ./data/datasets/wikipedia
+    update-url: /update?commit=true
+    queue-size: 10
+    produce-thread: 1
+    consume-thread: 20
+  # Query configuration
+  query:
+    query-url: /select?%s
+    query-params:
+      q: "*:*"
+      fl: value
+      start: 0
+      rows: 100
+
+

@@ -7,6 +7,7 @@ import requests
 from datasets import load_from_disk
 from tqdm import tqdm
 
+
 # Solr请求地址
 SOLR_HOST = "http://localhost:8983/solr/"
 # Solr测试核心
@@ -32,13 +33,6 @@ def query_data_from_list(query: str) -> list:
     for core in DATASET_CORE_LIST:
         result.extend(query_data(core, query))
     return result
-
-
-def update_data_test(docs: list):
-    url = SOLR_HOST + DATASET_CORE_TEST + SOLR_UPDATE_URL
-    headers = {'Content-Type': 'application/json'}
-    response = requests.post(url, json=docs, headers=headers)
-    return response
 
 
 def update_data(docs: list, index: int):
