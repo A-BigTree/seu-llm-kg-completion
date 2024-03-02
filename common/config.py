@@ -20,3 +20,4 @@ SOLR_UPDATE_CONSUMER_THREAD: int = CONFIG["solr"]["update"]["consume-thread"]
 # Solr query
 SOLR_QUERY_URL: str = CONFIG["solr"]["query"]["query-url"]
 SOLR_QUERY_PARAMS: dict = CONFIG["solr"]["query"]["query-params"]
+

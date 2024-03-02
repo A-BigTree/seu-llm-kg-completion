@@ -14,13 +14,13 @@ class BaseModel(object):
     def __exec_output(self):
         pass
 
-    def run_task(self):
+    def run_task(self) -> any:
         if self.input:
             self.__exec_input()
         self.__exec_process()
         if self.output:
-            self.__exec_output()
+            return self.__exec_output()
 
 
-class MultiRequest(BaseModel):
+class MultiThreadRequest(BaseModel):
     pass
