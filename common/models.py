@@ -3,17 +3,27 @@ from enum import Enum
 
 
 class DataSet(Enum):
+    """
+    Dataset type enum.
+    """
     WIKI_PEDIA = "wikipedia"
     FB60K_NYT10 = "FB60K-NYT10"
     UMLS_PUB_MED = "UMLS-PubMed"
 
 
 class BaseModel(object):
-
+    """
+    Base class for all models.
+    """
     def __init__(self,
                  name_: str,
                  input_: bool = False,
                  output_: bool = True):
+        """
+        :param name_: Model name.
+        :param input_: whether the model has input.
+        :param output_: whether the model has output.
+        """
         self.name = name_
         self.input = input_
         self.output = output_
@@ -29,6 +39,7 @@ class BaseModel(object):
         pass
 
     def run_task(self, *args, **kwargs) -> any:
+        """Main function to run task."""
         if self.input:
             self.__exec_input(*args, **kwargs)
         self.__exec_process(args, kwargs)
@@ -37,12 +48,22 @@ class BaseModel(object):
 
 
 class MultiThreadRequest(BaseModel):
+    """
+    Multi-thread request model.
+    """
     def __init__(self,
                  input_: bool,
                  name_: str,
                  queue_size: int,
                  produce_thread: int,
                  consumer_thread: int):
+        """
+        :param input_: whether the model has input.
+        :param name_: model name.
+        :param queue_size: multi-thread queue size.
+        :param produce_thread: produce thread number.
+        :param consumer_thread: consumer thread number.
+        """
         super(MultiThreadRequest, self).__init__(name_=name_,
                                                  input_=input_,
                                                  output_=True)
