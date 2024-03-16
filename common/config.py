@@ -5,6 +5,8 @@ import yaml
 with open("../config.yml", "r", encoding="utf-8") as f:
     CONFIG = yaml.load(f.read(), Loader=yaml.FullLoader)
 
+# logging config
+LOGGING_CONFIG: dict = CONFIG["logging"]
 # datasets config
 DATASETS_TYPE: str = CONFIG["datasets"]["type"]
 DATASETS_PATH: str = CONFIG["datasets"]["path"]
@@ -21,3 +23,9 @@ SOLR_UPDATE_CONSUMER_THREAD: int = CONFIG["solr"]["update"]["consume-thread"]
 SOLR_QUERY_URL: str = CONFIG["solr"]["query"]["query-url"]
 SOLR_QUERY_PARAMS: dict = CONFIG["solr"]["query"]["query-params"]
 
+
+# Dataset Enum
+class DataSet(Enum):
+    WIKI_PEDIA = "wikipedia"
+    FB60K_NYT10 = "FB60K-NYT10"
+    UMLS_PUB_MED = "UMLS-PubMed"

@@ -1,5 +1,9 @@
 # Configuration file for the application
 
+# Logging configuration
+logging:
+  level: INFO
+
 # Datasets configuration
 datasets:
   type: FB60K-NYT10
