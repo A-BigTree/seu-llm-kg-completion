@@ -30,12 +30,21 @@ class BaseModel(object):
         # TODO: add logger
 
     def __exec_input(self, *args, **kwargs):
+        """
+        override this function to execute input.
+        """
         pass
 
     def __exec_process(self, *args, **kwargs):
+        """
+        override this function to execute process.
+        """
         pass
 
     def __exec_output(self):
+        """
+        override this function to execute output.
+        """
         pass
 
     def run_task(self, *args, **kwargs) -> any:
@@ -75,12 +84,21 @@ class MultiThreadRequest(BaseModel):
         # TODO: add logger
 
     def __produce(self, *args, **kwargs):
+        """
+        override this function to produce data.
+        """
         pass
 
     def __consume(self, *args, **kwargs):
+        """
+        override this function to consume data.
+        """
         pass
 
     def __get_result(self) -> any:
+        """
+        override this function to get result.
+        """
         pass
 
     def __exec_process(self, *args, **kwargs):
