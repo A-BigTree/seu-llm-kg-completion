@@ -1,5 +1,3 @@
-from enum import Enum
-
 import yaml
 
 with open("../config.yml", "r", encoding="utf-8") as f:
@@ -22,10 +20,3 @@ SOLR_UPDATE_CONSUMER_THREAD: int = CONFIG["solr"]["update"]["consume-thread"]
 # Solr query
 SOLR_QUERY_URL: str = CONFIG["solr"]["query"]["query-url"]
 SOLR_QUERY_PARAMS: dict = CONFIG["solr"]["query"]["query-params"]
-
-
-# Dataset Enum
-class DataSet(Enum):
-    WIKI_PEDIA = "wikipedia"
-    FB60K_NYT10 = "FB60K-NYT10"
-    UMLS_PUB_MED = "UMLS-PubMed"

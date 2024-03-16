@@ -1,4 +1,11 @@
 from queue import Queue
+from enum import Enum
+
+
+class DataSet(Enum):
+    WIKI_PEDIA = "wikipedia"
+    FB60K_NYT10 = "FB60K-NYT10"
+    UMLS_PUB_MED = "UMLS-PubMed"
 
 
 class BaseModel(object):
