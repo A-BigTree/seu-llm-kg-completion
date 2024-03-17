@@ -3,6 +3,7 @@
 # Logging configuration
 logging:
   level: INFO
+  format: '[%(asctime)s][%(name)s][%(levelname)s][%(funcName)s] - %(message)s'
 
 # Datasets configuration
 datasets:
@@ -11,7 +12,7 @@ datasets:
 
 # Solr configuration
 solr:
-  host: http://localhost:8983/solr
+  host: http://localhost:8983/solr/
   cores:
     - wiki0
     - wiki1

@@ -1,10 +1,18 @@
 import yaml
+import logging
 
-with open("../config.yml", "r", encoding="utf-8") as f:
+with open("./config.yml", "r", encoding="utf-8") as f:
     CONFIG = yaml.load(f.read(), Loader=yaml.FullLoader)
 
 # logging config
 LOGGING_CONFIG: dict = CONFIG["logging"]
+
+logging.basicConfig(level=LOGGING_CONFIG["level"],
+                    format=LOGGING_CONFIG["format"])
+LOG_TASK = logging.getLogger("Task-Logger")
+LOG_UTIL = logging.getLogger("Util-Logger")
+LOG_TRAIN = logging.getLogger("Train-Logger")
+
 # datasets config
 DATASETS_TYPE: str = CONFIG["datasets"]["type"]
 DATASETS_PATH: str = CONFIG["datasets"]["path"]
