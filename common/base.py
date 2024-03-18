@@ -109,19 +109,13 @@ class MultiThreadRequest(BaseModel):
         """
         pass
 
-    def __get_result(self) -> any:
-        """
-        override this function to get result.
-        """
-        pass
-
     def exec_process(self, *args, **kwargs):
-        with ThreadPoolExecutor(max_workers=self.produce_thread) as executor_p:
+        with ThreadPoolExecutor(max_workers=self.produce_thread + 1) as executor_p:
             producer_future = []
             for _ in range(self.produce_thread):
                 future = executor_p.submit(self.produce, *args, **kwargs)
                 producer_future.append(future)
-            with ThreadPoolExecutor(max_workers=self.consumer_thread) as executor_c:
+            with ThreadPoolExecutor(max_workers=self.consumer_thread + 1) as executor_c:
                 consumer_future = []
                 for _ in range(self.consumer_thread):
                     future = executor_c.submit(self.consume, *args, **kwargs)
@@ -130,6 +124,3 @@ class MultiThreadRequest(BaseModel):
                     future.result()
             for future in as_completed(producer_future):
                 future.result()
-
-    def exec_output(self) -> any:
-        return self.__get_result()
