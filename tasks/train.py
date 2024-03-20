@@ -103,4 +103,5 @@ class GATTrainTask(BaseTrainTask):
                 loss.backward()
                 self.optimizer.step()
                 lr_scheduler.step()
-            LOG_TRAIN.info("Epoch {} , epoch_time {}".format(epoch, time.time() - t))
+            if epoch % 100 == 0:
+                LOG_TRAIN.info("Epoch {} , epoch_time {}".format(epoch, time.time() - t))
