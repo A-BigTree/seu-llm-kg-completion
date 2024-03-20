@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from common.config import TRAIN_CONFIG
 
 CUDA = torch.cuda.is_available()
 
@@ -26,7 +27,7 @@ class SpecialSpmmFunctionFinal(torch.autograd.Function):
         if ctx.needs_input_grad[1]:
             edge_sources = ctx.indices
             if CUDA:
-                edge_sources = edge_sources.to('cuda:0')
+                edge_sources = edge_sources.to(f'cuda:{TRAIN_CONFIG["cuda"]}')
             grad_values = grad_output[edge_sources]
         return None, grad_values, None, None, None
 
