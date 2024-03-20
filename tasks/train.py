@@ -27,7 +27,7 @@ class BaseTrainTask(BaseModel):
         (entity2id, relation2id,
          img_features, text_features,
          train_data, val_data, test_data) = load_data(self.params.data_dir, self.params.dataset)
-        LOG_TRAIN.info("Training data {:04d}".format(len(train_data[0])))
+        LOG_TRAIN.info("Dataset: {}, Training data {:04d}".format(self.params.dataset, len(train_data[0])))
         # TODO: different models
         self.corpus = ConvKBCorpus(self.params, train_data, val_data, test_data, entity2id, relation2id)
 
@@ -49,7 +49,7 @@ class BaseTrainTask(BaseModel):
     def exec_input(self, *args, **kwargs):
         self.model = self.init_model(*args, **kwargs)
         self.optimizer = self.init_optimizer(*args, **kwargs)
-        LOG_TRAIN.info(str(self.model))
+        LOG_TRAIN.info("Model info:\n" + str(self.model))
         tot_params = sum([np.prod(p.size()) for p in self.model.parameters()])
         LOG_TRAIN.info(f'Total number of parameters: {tot_params}')
         if self.params.cuda is not None and int(self.params.cuda) >= 0:
