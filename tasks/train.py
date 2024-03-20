@@ -88,9 +88,9 @@ class GATTrainTask(BaseTrainTask):
         )
         self.corpus.batch_size = len(self.corpus.train_triples)
         self.corpus.neg_num = 2
+        t = time.time()
         for epoch in range(self.params.epochs):
             self.model.train()
-            t = time.time()
             np.random.shuffle(self.corpus.train_triples)
             for i in range(1):
                 train_indices, train_values = self.corpus.get_batch(i)
