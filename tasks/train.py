@@ -92,7 +92,7 @@ class GATTrainTask(BaseTrainTask):
             self.model.train()
             t = time.time()
             np.random.shuffle(self.corpus.train_triples)
-            for i in range(self.corpus.max_batch_num):
+            for i in range(1):
                 train_indices, train_values = self.corpus.get_batch(i)
                 train_indices = torch.LongTensor(train_indices)
                 if self.params.cuda is not None and int(self.params.cuda) >= 0:
