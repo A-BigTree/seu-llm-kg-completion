@@ -33,7 +33,6 @@ class SolrInitTask(MultiThreadRequest):
                     continue
                 cache.append({"id": sum_, "entity_id": int(content['id']), "value": t})
                 sum_ += 1
-                LOG_TASK.info(t)
                 if len(cache) > 10000:
                     self.queue.put((cache, index_ % 5))
                     cache = []
