@@ -86,6 +86,8 @@ class GATTrainTask(BaseTrainTask):
             step_size=500,
             gamma=float(self.params.gamma)
         )
+        self.corpus.batch_size = len(self.corpus.train_triples)
+        self.corpus.neg_num = 2
         for epoch in range(self.params.epochs):
             self.model.train()
             t = time.time()
