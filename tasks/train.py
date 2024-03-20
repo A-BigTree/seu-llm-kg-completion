@@ -60,7 +60,7 @@ class BaseTrainTask(BaseModel):
 
     def exec_output(self) -> nn.Module:
         if self.params.save:
-            path = f"{self.params.save_dir}{self.params.datasets}/{self.params.model}_{self.params.epoch}.pth"
+            path = f"{self.params.save_dir}{self.params.dataset}/{self.params.model}_{self.params.epochs}.pth"
             torch.save(self.model.state_dict(), path)
             LOG_TRAIN.info(f"Model saved to {path}")
         return self.model
