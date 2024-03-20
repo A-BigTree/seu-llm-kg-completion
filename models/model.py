@@ -1,10 +1,11 @@
 import pickle
+from argparse import Namespace
 
 from models.layer import *
 
 
 class GAT(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args: Namespace):
         super().__init__()
 
         self.device = args.device
@@ -15,10 +16,10 @@ class GAT(nn.Module):
         self.relation_in_dim = args.dim
         self.relation_out_dim = args.dim
         self.n_heads_GAT = args.n_heads
-        self.neg_num = args.neg_num_gat
+        self.neg_num = args.neg_num
 
-        self.drop_GAT = args.dropout_gat
-        self.alpha = args.alpha_gat
+        self.drop_GAT = args.dropout
+        self.alpha = args.alpha
 
         # Initial Embedding
         self.entity_embeddings = nn.Parameter(torch.randn(self.num_nodes, self.entity_in_dim))

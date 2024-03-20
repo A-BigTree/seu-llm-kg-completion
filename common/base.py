@@ -61,7 +61,7 @@ class BaseModel(object):
         self.exec_process(*args, **kwargs)
         end_time = time.time()
         if self.cost_time:
-            LOG_TASK.info(f"Cost time: {end_time - start_time}s")
+            LOG_TASK.info(f"{self.name} finished. Cost time: {end_time - start_time}s")
         if self.output:
             return self.exec_output()
 

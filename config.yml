@@ -5,11 +5,6 @@ logging:
   level: INFO
   format: '[%(asctime)s][%(name)s][%(levelname)s][%(funcName)s] - %(message)s'
 
-# Datasets configuration
-datasets:
-  type: FB60K-NYT10
-  path: ./data/datasets
-
 # Solr configuration
 solr:
   host: http://localhost:8983/solr/
@@ -35,4 +30,39 @@ solr:
       start: 0
       rows: 100
 
+# Training configuration
+training:
+  data_dir: ./datasets/
+  dataset: FB15k-237
+  save: True
+  save_dir: ./data/models/
+  cuda: 0
+  model: GAT
+  epochs: 3000
+  batch_size: 128
+  lr: 0.0005
+  dropout: 0.3
+  weight_decay: 0.00001
+  seed: 10010
+  num_layer: 3
+  dim: 256
+  r_dim: 256
+  k_w: 10
+  k_h: 20
+  n_heads: 2
+  pre_trained: False
+  encoder: False
+  patience: 5
+  eval_freq: 10
+  lr_reduce_freq: 500
+  gamma: 1.0
+  bias: 1,
+  neg_num: 2
+  alpha: 0.2
+  out_channels: 32
+  kernel_size: 3
 
+tasks:
+  solr-init: False
+  data-init: False
+  model-train: False

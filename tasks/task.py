@@ -1,4 +1,5 @@
 import re
+from queue import Empty
 
 from common.config import *
 from common.base import *
@@ -49,7 +50,7 @@ class SolrInitTask(MultiThreadRequest):
                 url = SOLR_HOST + SOLR_CORES[index] + SOLR_UPDATE_URL
                 headers = {'Content-Type': 'application/json'}
                 requests.post(url, json=docs, headers=headers)
-            except Exception:
+            except Empty:
                 break
 
 

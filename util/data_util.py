@@ -1,5 +1,3 @@
-import pickle
-
 import numpy as np
 import torch
 
@@ -303,8 +301,8 @@ class ConvKBCorpus(Corpus):
             for j in range(self.neg_num // 2):
                 current_index = i * (self.neg_num // 2) + j
 
-                while(random_entities[current_index], self.batch_indices[last_index + current_index, 1],
-                      self.batch_indices[last_index + current_index, 2]) in self.all_triples.keys():
+                while (random_entities[current_index], self.batch_indices[last_index + current_index, 1],
+                       self.batch_indices[last_index + current_index, 2]) in self.all_triples.keys():
                     random_entities[current_index] = np.random.randint(0, len(self.entity2id))
 
                 self.batch_indices[last_index + current_index, 0] = random_entities[current_index]
@@ -312,8 +310,9 @@ class ConvKBCorpus(Corpus):
             for j in range(self.neg_num // 2):
                 current_index = last_index * (self.neg_num // 2) + i * (self.neg_num // 2) + j
 
-                while (self.batch_indices[last_index + current_index, 0], self.batch_indices[last_index + current_index, 1],
-                       random_entities[current_index]) in self.all_triples.keys():
+                while (
+                self.batch_indices[last_index + current_index, 0], self.batch_indices[last_index + current_index, 1],
+                random_entities[current_index]) in self.all_triples.keys():
                     random_entities[current_index] = np.random.randint(0, len(self.entity2id))
 
                 self.batch_indices[last_index + current_index, 2] = random_entities[current_index]
@@ -360,15 +359,15 @@ class ConvKBCorpus(Corpus):
             x_tail = np.insert(x_tail, rand_tail, split_triples[i], axis=0)
             x_head = torch.LongTensor(x_head).to(self.device)
             x_tail = torch.LongTensor(x_tail).to(self.device)
-            #scores_head = model.forward(x_head)
+            # scores_head = model.forward(x_head)
             scores_head = model.predict(x_head)
             sorted_scores_head, sorted_triples_head = torch.sort(scores_head.view(-1), dim=-1, descending=True)
-            ranks_head.append(np.where(sorted_triples_head.cpu().numpy() == rand_head)[0][0]+1)
+            ranks_head.append(np.where(sorted_triples_head.cpu().numpy() == rand_head)[0][0] + 1)
             reciprocal_ranks_head.append(1.0 / ranks_head[-1])
-            #scores_tail = model.forward(x_tail)
+            # scores_tail = model.forward(x_tail)
             scores_tail = model.predict(x_tail)
             sorted_scores_tail, sorted_triples_tail = torch.sort(scores_tail.view(-1), dim=-1, descending=True)
-            ranks_tail.append(np.where(sorted_triples_tail.cpu().numpy() == rand_tail)[0][0]+1)
+            ranks_tail.append(np.where(sorted_triples_tail.cpu().numpy() == rand_tail)[0][0] + 1)
             reciprocal_ranks_tail.append(1.0 / ranks_tail[-1])
 
         for i in range(len(ranks_head)):
@@ -413,11 +412,14 @@ class ConvKBCorpus(Corpus):
         hits_3 = (hits_at_3_head / len(ranks_head) + hits_at_3_tail / len(ranks_tail)) / 2
         hits_1 = (hits_at_1_head / len(ranks_head) + hits_at_1_tail / len(ranks_tail)) / 2
         mean_rank = (sum(ranks_head) / len(ranks_head) + sum(ranks_tail) / len(ranks_tail)) / 2
-        mean_reciprocal_rank = (sum(reciprocal_ranks_head) / len(reciprocal_ranks_head) + sum(reciprocal_ranks_tail) / len(reciprocal_ranks_tail)) / 2
+        mean_reciprocal_rank = (sum(reciprocal_ranks_head) / len(reciprocal_ranks_head) + sum(
+            reciprocal_ranks_tail) / len(reciprocal_ranks_tail)) / 2
 
-        metrics = {"Hits@100_head": hits_100_head, "Hits@10_head": hits_10_head, "Hits@3_head": hits_3_head, "Hits@1_head": hits_1_head,
+        metrics = {"Hits@100_head": hits_100_head, "Hits@10_head": hits_10_head, "Hits@3_head": hits_3_head,
+                   "Hits@1_head": hits_1_head,
                    "Mean Rank_head": mean_rank_head, "Mean Reciprocal Rank_head": mean_reciprocal_rank_head,
-                   "Hits@100_tail": hits_100_tail, "Hits@10_tail": hits_10_tail, "Hits@3_tail": hits_3_tail, "Hits@1_tail": hits_1_tail,
+                   "Hits@100_tail": hits_100_tail, "Hits@10_tail": hits_10_tail, "Hits@3_tail": hits_3_tail,
+                   "Hits@1_tail": hits_1_tail,
                    "Mean Rank_tail": mean_rank_tail, "Mean Reciprocal Rank_tail": mean_reciprocal_rank_tail,
                    "Hits@100": hits_100, "Hits@10": hits_10, "Hits@3": hits_3, "Hits@1": hits_1,
                    "Mean Rank": mean_rank, "Mean Reciprocal Rank": mean_reciprocal_rank}
@@ -451,7 +453,7 @@ def get_adj(path, split):
     triples = []
     rows, cols, data = [], [], []
     unique_entities = set()
-    with open(path+split+'.txt', 'r', encoding="utf-8") as f:
+    with open(path + split + '.txt', 'r', encoding="utf-8") as f:
         for line in f:
             instance = line.strip().split(' ')
             e1, r, e2 = instance[0], instance[1], instance[2]
@@ -465,8 +467,8 @@ def get_adj(path, split):
     return triples, (rows, cols, data), unique_entities
 
 
-def load_data(datasets):
-    path = './data/datasets/'+datasets+'/'
+def load_data(path, datasets):
+    path = path + datasets + '/'
     train_triples, train_adj, train_unique_entities = get_adj(path, 'train')
     val_triples, val_adj, val_unique_entities = get_adj(path, 'val')
     test_triples, test_adj, test_unique_entities = get_adj(path, 'test')

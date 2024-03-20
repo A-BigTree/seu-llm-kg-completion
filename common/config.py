@@ -13,9 +13,6 @@ LOG_TASK = logging.getLogger("Task-Logger")
 LOG_UTIL = logging.getLogger("Util-Logger")
 LOG_TRAIN = logging.getLogger("Train-Logger")
 
-# datasets config
-DATASETS_TYPE: str = CONFIG["datasets"]["type"]
-DATASETS_PATH: str = CONFIG["datasets"]["path"]
 # solr config
 SOLR_HOST: str = CONFIG["solr"]["host"]
 SOLR_CORES: list = CONFIG["solr"]["cores"]
@@ -28,3 +25,6 @@ SOLR_UPDATE_CONSUMER_THREAD: int = CONFIG["solr"]["update"]["consume-thread"]
 # Solr query
 SOLR_QUERY_URL: str = CONFIG["solr"]["query"]["query-url"]
 SOLR_QUERY_PARAMS: dict = CONFIG["solr"]["query"]["query-params"]
+
+# Train config
+TRAIN_CONFIG: dict = CONFIG["training"]
