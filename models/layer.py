@@ -132,3 +132,74 @@ class SpGAT(nn.Module):
         x_rel = relation_embeddings.mm(self.W)
         x = F.elu(self.out_att(x, edge_list))
         return x, x_rel
+
+
+class MutanLayer(nn.Module):
+
+    def __init__(self, dim, multi):
+        super(MutanLayer, self).__init__()
+
+        self.dim = dim
+        self.multi = multi
+
+        modal1 = []
+        for i in range(self.multi):
+            do = nn.Dropout(p=0.2)
+            lin = nn.Linear(dim, dim)
+            modal1.append(nn.Sequential(do, lin, nn.ReLU()))
+        self.modal1_layers = nn.ModuleList(modal1)
+
+        modal2 = []
+        for i in range(self.multi):
+            do = nn.Dropout(p=0.2)
+            lin = nn.Linear(dim, dim)
+            modal2.append(nn.Sequential(do, lin, nn.ReLU()))
+        self.modal2_layers = nn.ModuleList(modal2)
+
+        modal3 = []
+        for i in range(self.multi):
+            do = nn.Dropout(p=0.2)
+            lin = nn.Linear(dim, dim)
+            modal3.append(nn.Sequential(do, lin, nn.ReLU()))
+        self.modal3_layers = nn.ModuleList(modal3)
+
+    def forward(self, modal1_emb, modal2_emb, modal3_emb):
+        bs = modal1_emb.size(0)
+        x_mm = []
+        for i in range(self.multi):
+            x_modal1 = self.modal1_layers[i](modal1_emb)
+            x_modal2 = self.modal2_layers[i](modal2_emb)
+            x_modal3 = self.modal3_layers[i](modal3_emb)
+            x_mm.append(torch.mul(torch.mul(x_modal1, x_modal2), x_modal3))
+        x_mm = torch.stack(x_mm, dim=1)
+        x_mm = x_mm.sum(1).view(bs, self.dim)
+        x_mm = torch.relu(x_mm)
+        return x_mm
+
+
+class TuckERLayer(nn.Module):
+    def __init__(self, dim, r_dim):
+        super(TuckERLayer, self).__init__()
+
+        self.W = nn.Parameter(torch.rand(r_dim, dim, dim))
+        nn.init.xavier_uniform_(self.W.data)
+        self.bn0 = nn.BatchNorm1d(dim)
+        self.bn1 = nn.BatchNorm1d(dim)
+        self.input_drop = nn.Dropout(0.3)
+        self.hidden_drop = nn.Dropout(0.4)
+        self.out_drop = nn.Dropout(0.5)
+
+    def forward(self, e_embed, r_embed):
+        x = self.bn0(e_embed)
+        x = self.input_drop(x)
+        x = x.view(-1, 1, x.size(1))
+
+        r = torch.mm(r_embed, self.W.view(r_embed.size(1), -1))
+        r = r.view(-1, x.size(2), x.size(2))
+        r = self.hidden_drop(r)
+
+        x = torch.bmm(x, r)
+        x = x.view(-1, x.size(2))
+        x = self.bn1(x)
+        x = self.out_drop(x)
+        return x
