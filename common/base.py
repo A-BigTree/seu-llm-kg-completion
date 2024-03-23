@@ -10,8 +10,10 @@ class DataSet(Enum):
     Dataset type enum.
     """
     WIKI_PEDIA = "wikipedia"
-    FB60K_NYT10 = "FB60K-NYT10"
-    UMLS_PUB_MED = "UMLS-PubMed"
+    DB15K = "DB15K"
+    FB15K = "FB15K"
+    FB15K_237 = "FB15K-237"
+    YAGO15K = "YAGO15K"
 
 
 class BaseModel(object):
