@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from common.config import TRAIN_CONFIG
 
-CUDA = torch.cuda.is_available()
-
 
 class SpecialSpmmFunctionFinal(torch.autograd.Function):
     """Special function for only sparse region back prop-attention layer."""
@@ -26,7 +24,7 @@ class SpecialSpmmFunctionFinal(torch.autograd.Function):
         grad_values = None
         if ctx.needs_input_grad[1]:
             edge_sources = ctx.indices
-            if CUDA:
+            if TRAIN_CONFIG["cuda"] is not None and TRAIN_CONFIG["cuda"] >= 0:
                 edge_sources = edge_sources.to(f'cuda:{TRAIN_CONFIG["cuda"]}')
             grad_values = grad_output[edge_sources]
         return None, grad_values, None, None, None

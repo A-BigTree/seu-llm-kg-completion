@@ -1,8 +1,8 @@
 import yaml
 import logging
 
-with open("./config.yml", "r", encoding="utf-8") as f:
-    CONFIG = yaml.load(f.read(), Loader=yaml.FullLoader)
+with open("./config.yml", "r", encoding="utf-8") as file:
+    CONFIG = yaml.load(file.read(), Loader=yaml.FullLoader)
 
 # logging config
 LOGGING_CONFIG: dict = CONFIG["logging"]
@@ -25,6 +25,8 @@ SOLR_UPDATE_CONSUMER_THREAD: int = CONFIG["solr"]["update"]["consume-thread"]
 # Solr query
 SOLR_QUERY_URL: str = CONFIG["solr"]["query"]["query-url"]
 SOLR_QUERY_PARAMS: dict = CONFIG["solr"]["query"]["query-params"]
-
+# data config
+DATASETS_PATH: str = CONFIG["datasets"]["path"]
+DATASETS_TYPE: list = CONFIG["datasets"]["types"]
 # Train config
 TRAIN_CONFIG: dict = CONFIG["training"]

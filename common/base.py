@@ -35,7 +35,7 @@ class BaseModel(object):
         self.input = input_
         self.output = output_
         self.cost_time = cost_time
-        LOG_TASK.info(f"Model {self.name} (input: {self.input}, output: {self.output}) is initialized.")
+        LOG_TASK.info(f"{self.name} (input: {self.input}, output: {self.output}) is initialized.")
 
     def exec_input(self, *args, **kwargs):
         """
@@ -47,7 +47,7 @@ class BaseModel(object):
         """
         override this function to execute process.
         """
-        pass
+        raise NotImplementedError
 
     def exec_output(self):
         """
@@ -103,13 +103,13 @@ class MultiThreadRequest(BaseModel):
         """
         override this function to produce data.
         """
-        pass
+        raise NotImplementedError
 
     def consume(self, *args, **kwargs):
         """
         override this function to consume data.
         """
-        pass
+        raise NotImplementedError
 
     def exec_process(self, *args, **kwargs):
         with ThreadPoolExecutor(max_workers=self.produce_thread + 1) as executor_p:

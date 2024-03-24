@@ -30,6 +30,15 @@ solr:
       start: 0
       rows: 100
 
+# Datasets configuration for pre-task
+datasets:
+  path: ./data/pre/
+  types:
+    - DB15K
+    - FB15K
+    - FB15K-237
+    - YAGO15K
+
 # Training configuration
 training:
   data_dir: ./datasets/
