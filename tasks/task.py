@@ -134,10 +134,12 @@ class PreProcessTask(BaseModel):
                         elems[0] = wiki_croup[elems[0]]["label"].replace(" ", "_")
                     else:
                         error_data.add(elems[0] + "\n")
+                        continue
                     if elems[2] in wiki_croup:
                         elems[2] = wiki_croup[elems[2]]["label"].replace(" ", "_")
                     else:
                         error_data.add(elems[2] + "\n")
+                        continue
                 else:
                     e1 = reg.search(elems[0])
                     elems[0] = e1.group(1)

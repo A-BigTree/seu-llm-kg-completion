@@ -12,5 +12,4 @@ if __name__ == '__main__':
     # task = SolrInitTask()
     # task = GATTrainTask()
     task = PreProcessTask()
-    # task.run_task()
-    deal_with_error_data()
+    task.run_task()

@@ -38,7 +38,7 @@ def deal_with_error_data():
         if len(cache) > 0:
             error_data = cache
             cache = []
-        for entities in tqdm(zip(*(iter(error_data),) * 10)):
+        for entities in tqdm(error_data):
             query = query_wikidata_with_freebase % "\"\"".join(entities)
             url = "https://query.wikidata.org/bigdata/namespace/wdq/sparql"
             try:
@@ -57,17 +57,16 @@ def deal_with_error_data():
             response_json = response.json()
             for item in response_json["results"]["bindings"]:
                 fb = item['fb']['value']
+                wd = item['wd']['value'].replace('http://www.wikidata.org/entity/', '')
                 label = item['wdLabel']['value'] if 'wdLabel' in item else None
                 desc = item['wdDescription']['value'] if 'wdDescription' in item else None
-                alias = {item['alternative']['value']} if 'alternative' in item else list()
-
+                alias = [item['alternative']['value']] if 'alternative' in item else []
                 if fb not in result:
                     result[fb] = {'label': label,
                                   'description': desc,
+                                  "wikidata_id": wd,
                                   'alternatives': alias}
-
         if len(cache) == 0:
             break
-    LOG_UTIL.info(result)
     with open(DATASETS_PATH + "deal_error.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=4)
