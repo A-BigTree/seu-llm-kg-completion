@@ -1,5 +1,6 @@
 import json
 import re
+import string
 from queue import Empty
 
 from common.config import *
@@ -156,9 +157,9 @@ class GPTRequestTask(MultiThreadRequest):
     def __init__(self):
         super().__init__(name_="GPT Request Task",
                          input_=False,
-                         queue_size=10,
+                         queue_size=GPT_REQUEST_THREAD,
                          produce_thread=1,
-                         consumer_thread=1)
+                         consumer_thread=GPT_REQUEST_THREAD)
         self.url = GPT_URL
         self.api_key = GPT_API_KEY
         self.model = GPT_MODEL
@@ -187,7 +188,7 @@ class GPTRequestTask(MultiThreadRequest):
             for da in data:
                 if da[2] == tail:
                     heads.append(da[0])
-            short_head = max(heads, key=lambda x: len(x))
+            short_head = min(heads, key=lambda x: len(x))
             result.append((i, short_head, tail))
             i += 1
         return result
@@ -204,7 +205,7 @@ class GPTRequestTask(MultiThreadRequest):
                 for line in lines:
                     examples.append(line.strip(" |\n"))
                 choose_examples = self.__choose_example(examples)
-                self.result_queue.put((value, len(choose_examples)))
+                self.result_queue.put((dataset, value, len(choose_examples)))
                 for example in choose_examples:
                     self.queue.put((dataset, value, example[0], example[1], example[2]))
 
@@ -216,7 +217,7 @@ class GPTRequestTask(MultiThreadRequest):
                 break
             boby = {
                 "model": self.model,
-                "message": [{
+                "messages": [{
                     "role": "user",
                     "content": GPT_PROMPT % (head, tail, head, tail)
                 }]
@@ -234,13 +235,27 @@ class GPTRequestTask(MultiThreadRequest):
                     continue
                 response_json = response.json()
                 result = response_json["choices"][0]["message"]["content"]
-                with open(self.path + dataset + f"/txt/{relation}_{index}_relation.txt", "w", encoding="utf-8") as f:
+                with open(self.path + dataset + f"/txt/min/{relation}_{index}_relation.txt", "w", encoding="utf-8") as f:
                     f.write(result + "\n")
             except Exception as e:
                 print(e)
                 self.cache_queue.put((dataset, relation, index, head, tail))
                 time.sleep(5)
                 continue
+
+    def exec_output(self):
+        while not self.result_queue.empty():
+            dataset, relation, num = self.result_queue.get()
+            result = []
+            for i in range(num):
+                with open(self.path + dataset + f"/txt/min/{relation}_{i}_relation.txt", "r", encoding="utf-8") as f:
+                    for line in f.readlines():
+                        line = line.strip(" |\n|.").strip(string.digits).strip(" |\n|.")
+                        if line == "":
+                            continue
+                        result.append(line + "\n")
+            with open(self.path + dataset + f"/txt/min/{relation}_all_relation.txt", "w", encoding="utf-8") as f:
+                f.writelines(result)
 
 
 class SolrRecallTask(BaseModel):

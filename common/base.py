@@ -128,6 +128,7 @@ class MultiThreadRequest(BaseModel):
                 if self.cache_queue.empty():
                     break
                 else:
+                    self.queue = Queue()
                     LOG_TASK.warn(f"Cache queue is not empty(Size:{self.cache_queue.qsize()}), continue to consume.")
                     while not self.cache_queue.empty():
                         self.queue.put(self.cache_queue.get())

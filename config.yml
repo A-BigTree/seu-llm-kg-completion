@@ -45,9 +45,9 @@ gpt:
   api-key: <API_KEY>
   proxy: null
   model: gpt-3.5-turbo-0125
-  prompt: "Generate 20 brief natural language descriptions for the KG triplet (%s, %s) with '%s' replaced as <H> and '%s' as <T>"
-  relation-example-num: 2
-  request-thread: 1
+  prompt: "Generate 20 brief natural language descriptions(less than 10 words) for the KG triplet (%s,,%s) with the '%s' replaced as <H> and the '%s' as <T>"
+  relation-example-num: 3
+  request-thread: 20
   request-timeout: 20
 
 
