@@ -28,5 +28,14 @@ SOLR_QUERY_PARAMS: dict = CONFIG["solr"]["query"]["query-params"]
 # data config
 DATASETS_PATH: str = CONFIG["datasets"]["path"]
 DATASETS_TYPE: list = CONFIG["datasets"]["types"]
+# OpenAI GPT config
+GPT_URL: str = CONFIG["gpt"]["api-url"]
+GPT_API_KEY: str = CONFIG["gpt"]["api-key"]
+GPT_PROXIES: dict | None = CONFIG["gpt"]["proxy"]
+GPT_MODEL: str = CONFIG["gpt"]["model"]
+GPT_PROMPT: str = CONFIG["gpt"]["prompt"]
+RELATION_EXAMPLE_NUM: int = CONFIG["gpt"]["relation-example-num"]
+GPT_REQUEST_TIMEOUT: int = CONFIG["gpt"]["request-timeout"]
+GPT_REQUEST_THREAD: int = CONFIG["gpt"]["request-thread"]
 # Train config
 TRAIN_CONFIG: dict = CONFIG["training"]

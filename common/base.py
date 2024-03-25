@@ -117,12 +117,19 @@ class MultiThreadRequest(BaseModel):
             for _ in range(self.produce_thread):
                 future = executor_p.submit(self.produce, *args, **kwargs)
                 producer_future.append(future)
-            with ThreadPoolExecutor(max_workers=self.consumer_thread + 1) as executor_c:
-                consumer_future = []
-                for _ in range(self.consumer_thread):
-                    future = executor_c.submit(self.consume, *args, **kwargs)
-                    consumer_future.append(future)
-                for future in as_completed(consumer_future):
-                    future.result()
+            while True:
+                with ThreadPoolExecutor(max_workers=self.consumer_thread + 1) as executor_c:
+                    consumer_future = []
+                    for _ in range(self.consumer_thread):
+                        future = executor_c.submit(self.consume, *args, **kwargs)
+                        consumer_future.append(future)
+                    for future in as_completed(consumer_future):
+                        future.result()
+                if self.cache_queue.empty():
+                    break
+                else:
+                    LOG_TASK.warn(f"Cache queue is not empty(Size:{self.cache_queue.qsize()}), continue to consume.")
+                    while not self.cache_queue.empty():
+                        self.queue.put(self.cache_queue.get())
             for future in as_completed(producer_future):
                 future.result()

@@ -4,11 +4,13 @@ from queue import Empty
 
 from common.config import *
 from common.base import *
+from util.data_util import read_relation_from_id, read_entity_from_id
 from datasets import load_from_disk
 from tqdm import tqdm
 import gc
 import requests
 import urllib.parse
+from collections import Counter
 
 
 class SolrInitTask(MultiThreadRequest):
@@ -105,14 +107,8 @@ class PreProcessTask(BaseModel):
     def exec_process(self, *args, **kwargs):
         error_data = set()
         for dataset in self.datasets:
-            relation = dict()
-            with open(self.path + dataset + f"/relation2id.txt", "r", encoding="utf-8") as f:
-                for line in f.readlines():
-                    line = line.strip()
-                    if line == "":
-                        continue
-                    line = line.split(" ")
-                    relation[line[0]] = line[1]
+            path = self.path + dataset + "/"
+            relation = read_relation_from_id(path)
             wiki_croup = dict()
             reg = re.compile(r"/([^/>]+)>$")
             if dataset == DataSet.FB15K.value or dataset == DataSet.FB15K_237.value:
@@ -120,6 +116,7 @@ class PreProcessTask(BaseModel):
                     wiki_croup = json.load(f)
             with open(self.path + dataset + f"/{dataset}_data.txt", "r", encoding="utf-8") as f:
                 lines = f.readlines()
+            entity2id = read_entity_from_id(path)
             result = []
             for key, _ in relation.items():
                 result.append([])
@@ -129,6 +126,7 @@ class PreProcessTask(BaseModel):
                 if line == "":
                     continue
                 elems = line.split(" ")
+                index = [entity2id[elems[0]], entity2id[elems[2]]]
                 if dataset == DataSet.FB15K.value or dataset == DataSet.FB15K_237.value:
                     if elems[0] in wiki_croup:
                         elems[0] = wiki_croup[elems[0]]["label"].replace(" ", "_")
@@ -145,7 +143,7 @@ class PreProcessTask(BaseModel):
                     elems[0] = e1.group(1)
                     e2 = reg.search(elems[2])
                     elems[2] = e2.group(1)
-                result[int(relation[elems[1]])].append(" ".join(elems) + "\n")
+                result[int(relation[elems[1]])].append(" ".join(elems + index) + "\n")
             for i in range(len(result)):
                 with open(self.path + dataset + f"/relation/{i}_relation2entity.txt", "w", encoding="utf-8") as f:
                     f.writelines(result[i])
@@ -155,8 +153,94 @@ class PreProcessTask(BaseModel):
 
 class GPTRequestTask(MultiThreadRequest):
     """Url request task."""
+    def __init__(self):
+        super().__init__(name_="GPT Request Task",
+                         input_=False,
+                         queue_size=10,
+                         produce_thread=1,
+                         consumer_thread=1)
+        self.url = GPT_URL
+        self.api_key = GPT_API_KEY
+        self.model = GPT_MODEL
+        self.proxies = GPT_PROXIES
+        self.path = DATASETS_PATH
+        self.datasets = DATASETS_TYPE
+        self.relation_example_num = RELATION_EXAMPLE_NUM
+        self.header = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
 
-    pass
+    def __choose_example(self, examples: list):
+        tails = []
+        data = []
+        for example in examples:
+            elems = example.split(" ")
+            tails.append(elems[2])
+            data.append(elems[:5])
+        counter = Counter(tails)
+        choose_tails = counter.most_common(self.relation_example_num)
+        result = []
+        i = 0
+        for tail, _ in choose_tails:
+            heads = []
+            for da in data:
+                if da[2] == tail:
+                    heads.append(da[0])
+            short_head = max(heads, key=lambda x: len(x))
+            result.append((i, short_head, tail))
+            i += 1
+        return result
+
+    def produce(self, *args, **kwargs):
+        for dataset in self.datasets:
+            LOG_TASK.info(f"Start process {dataset} data.")
+            path = self.path + dataset + "/"
+            relation = read_relation_from_id(path)
+            for _, value in tqdm(relation.items()):
+                examples = []
+                with open(path + f"relation/{value}_relation2entity.txt", "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                for line in lines:
+                    examples.append(line.strip(" |\n"))
+                choose_examples = self.__choose_example(examples)
+                self.result_queue.put((value, len(choose_examples)))
+                for example in choose_examples:
+                    self.queue.put((dataset, value, example[0], example[1], example[2]))
+
+    def consume(self, *args, **kwargs):
+        while True:
+            try:
+                dataset, relation, index, head, tail = self.queue.get(timeout=5)
+            except Empty:
+                break
+            boby = {
+                "model": self.model,
+                "message": [{
+                    "role": "user",
+                    "content": GPT_PROMPT % (head, tail, head, tail)
+                }]
+            }
+            try:
+                response = requests.post(self.url,
+                                         headers=self.header,
+                                         json=boby,
+                                         proxies=self.proxies,
+                                         timeout=GPT_REQUEST_TIMEOUT)
+                if response.status_code != 200:
+                    LOG_TASK.error(f"Error status code: {response.status_code}")
+                    self.cache_queue.put((dataset, relation, index, head, tail))
+                    time.sleep(5)
+                    continue
+                response_json = response.json()
+                result = response_json["choices"][0]["message"]["content"]
+                with open(self.path + dataset + f"/txt/{relation}_{index}_relation.txt", "w", encoding="utf-8") as f:
+                    f.write(result + "\n")
+            except Exception as e:
+                print(e)
+                self.cache_queue.put((dataset, relation, index, head, tail))
+                time.sleep(5)
+                continue
 
 
 class SolrRecallTask(BaseModel):

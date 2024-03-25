@@ -431,7 +431,10 @@ def read_entity_from_id(path):
     entity2id = {}
     with open(path + 'entity2id.txt', 'r', encoding="utf-8") as f:
         for line in f:
-            instance = line.strip().split()
+            line = line.strip()
+            if line == "":
+                continue
+            instance = line.split(" ")
             entity2id[instance[0]] = int(instance[1])
 
     return entity2id
@@ -441,7 +444,10 @@ def read_relation_from_id(path):
     relation2id = {}
     with open(path + 'relation2id.txt', 'r', encoding="utf-8") as f:
         for line in f:
-            instance = line.strip().split()
+            line = line.strip()
+            if line == "":
+                continue
+            instance = line.split(" ")
             relation2id[instance[0]] = int(instance[1])
 
     return relation2id

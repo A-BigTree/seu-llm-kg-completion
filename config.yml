@@ -35,18 +35,20 @@ datasets:
   path: ./data/pre/
   types:
     - DB15K
-    - FB15K
-    - FB15K-237
-    - YAGO15K
+    # - FB15K
+    # - FB15K-237
+    # - YAGO15K
 
 # OpenAI GPT configuration
 gpt:
-  api-url: https://api.openai.com/v1/engines/davinci/completions
+  api-url: https://api.openai-proxy.org/v1/chat/completions
   api-key: <API_KEY>
-  proxy: None
+  proxy: null
+  model: gpt-3.5-turbo-0125
+  prompt: "Generate 20 brief natural language descriptions for the KG triplet (%s, %s) with '%s' replaced as <H> and '%s' as <T>"
   relation-example-num: 2
-  request-thread: 10
-  request-timeout: 10
+  request-thread: 1
+  request-timeout: 20
 
 
 # Training configuration
