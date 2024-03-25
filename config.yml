@@ -39,6 +39,16 @@ datasets:
     - FB15K-237
     - YAGO15K
 
+# OpenAI GPT configuration
+gpt:
+  api-url: https://api.openai.com/v1/engines/davinci/completions
+  api-key: <API_KEY>
+  proxy: None
+  relation-example-num: 2
+  request-thread: 10
+  request-timeout: 10
+
+
 # Training configuration
 training:
   data_dir: ./datasets/
