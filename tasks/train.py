@@ -190,7 +190,6 @@ class MFTrainTask(BaseTrainTask):
 
         best_val_metrics = self.init_metric_dict()
         best_test_metrics = self.init_metric_dict()
-        LOG_TRAIN.info(len(self.corpus.train_triples))
         self.corpus.batch_size = self.params.batch_size
         self.corpus.neg_num = self.params.neg_num
 
