@@ -2,6 +2,8 @@ import argparse
 import time
 
 from torch.optim import Optimizer
+from tqdm import tqdm
+from transformers import BertTokenizer, BertModel
 
 from common.base import BaseModel
 from common.config import *
@@ -12,8 +14,8 @@ from util.data_util import *
 class BaseTrainTask(BaseModel):
     def __init__(self, model_name: str, params: dict):
         super().__init__(f"Model: {model_name} training task", input_=True)
-        self.model: nn.Module | None = None
-        self.optimizer: Optimizer | None = None
+        self.model: nn.Module = None
+        self.optimizer: Optimizer = None
         parser = argparse.ArgumentParser()
         for param, val in params.items():
             parser.add_argument(f"--{param}", action="append", default=val)
@@ -25,12 +27,16 @@ class BaseTrainTask(BaseModel):
         LOG_TRAIN.info(f"Using device: {self.params.device}")
         torch.cuda.set_device(self.params.cuda)
         (entity2id, relation2id,
-         img_features, text_features,
          train_data, val_data, test_data) = load_data(self.params.data_dir, self.params.dataset)
         LOG_TRAIN.info("Dataset: {}, Training data {:04d}".format(self.params.dataset, len(train_data[0])))
         # TODO: different models
-        self.corpus = ConvKBCorpus(self.params, train_data, val_data, test_data, entity2id, relation2id)
-
+        if self.params.model in ['MF']:
+            self.corpus = ConvECorpus(self.params, train_data, val_data, test_data, entity2id, relation2id)
+        else:
+            self.corpus = ConvKBCorpus(self.params, train_data, val_data, test_data, entity2id, relation2id)
+        if self.params.text_features:
+            text_features = load_text_data(TEXT_EMBEDDING_SAVE_DIR, self.params.dataset)
+            self.params.desp = F.normalize(torch.Tensor(text_features), p=2, dim=1)
         self.params.entity2id = entity2id
         self.params.relation2id = relation2id
 
@@ -120,3 +126,119 @@ class GATTrainTask(BaseTrainTask):
             if epoch % 100 == 0:
                 LOG_TRAIN.info("Epoch {} , cost time {}s".format(epoch, time.time() - t))
                 t = time.time()
+
+
+class TextEmbeddingTask(BaseModel):
+    def __init__(self):
+        super().__init__("Text Embedding Task", input_=False)
+        self.model = BertModel.from_pretrained(TEXT_EMBEDDING_MODEL)
+        self.tokenizer = BertTokenizer.from_pretrained(TEXT_EMBEDDING_TOKENIZER)
+        self.max_length = TEXT_EMBEDDING_MAX_LENGTH
+        self.data_dir = TEXT_EMBEDDING_DATA_DIR
+        self.save_dir = TEXT_EMBEDDING_SAVE_DIR
+        self.dataset = TEXT_EMBEDDING_DATASET
+        self.text_embedding = []
+
+    def exec_process(self, *args, **kwargs):
+        self.text_embedding = []
+        text = []
+        with open(f"{self.data_dir}{self.dataset}/txt/entity_description.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    text.append(line)
+        for line in tqdm(text):
+            tokens = self.tokenizer.encode(line, add_special_tokens=True,
+                                           max_length=self.max_length, truncation=True,
+                                           return_tensors='pt')
+            with torch.no_grad():
+                outputs = self.model(tokens)
+                pooled_output = outputs[1]
+            self.text_embedding.append(pooled_output.numpy())
+
+    def exec_output(self):
+        with open(f"{self.save_dir}{self.dataset}/text_embedding.pkl", "wb") as f:
+            pickle.dump(self.text_embedding, f)
+
+
+class MFTrainTask(BaseTrainTask):
+    def __init__(self):
+        super().__init__("Multimodal Fusion", TRAIN_CONFIG)
+
+    def init_model(self, *args, **kwargs) -> nn.Module:
+        return MultimodalFusionModule(self.params)
+
+    def init_optimizer(self, *args, **kwargs) -> torch.optim.Optimizer:
+        return torch.optim.Adam(
+            params=self.model.parameters(),
+            lr=self.params.lr,
+            weight_decay=self.params.weight_decay
+        )
+
+    def exec_train_task(self):
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, self.params.gamma)
+        if self.params.encoder:
+            model_gat = GAT(self.params)
+            model_gat = model_gat.to(self.params.device)
+            model_gat.load_state_dict(
+                torch.load(f'./data/models/{self.params.dataset}/GAT_3000.pth'), strict=False)
+            pickle.dump(model_gat.final_entity_embeddings.detach().cpu().numpy(),
+                        open('./data/models/' + self.params.dataset + '/gat_entity_vec.pkl', 'wb'))
+            pickle.dump(model_gat.final_relation_embeddings.detach().cpu().numpy(),
+                        open('./data/models/' + self.params.dataset + '/gat_relation_vec.pkl', 'wb'))
+        self.model = self.model.to(self.params.device)
+
+        best_val_metrics = self.init_metric_dict()
+        best_test_metrics = self.init_metric_dict()
+        LOG_TRAIN.info(len(self.corpus.train_triples))
+        self.corpus.batch_size = self.params.batch_size
+        self.corpus.neg_num = self.params.neg_num
+
+        for epoch in range(self.params.epochs):
+            self.model.train()
+            epoch_loss = []
+            t = time.time()
+            self.corpus.shuffle()
+            for batch_num in range(self.corpus.max_batch_num):
+                self.optimizer.zero_grad()
+                train_indices, train_values = self.corpus.get_batch(batch_num)
+                train_indices = torch.LongTensor(train_indices)
+                if self.params.cuda is not None and int(self.params.cuda) >= 0:
+                    train_indices = train_indices.to(self.params.device)
+                    train_values = train_values.to(self.params.device)
+                output = self.model.forward(train_indices)
+                loss = self.model.loss_func(output, train_values)
+                loss.backward()
+                self.optimizer.step()
+                epoch_loss.append(loss.data.item())
+            lr_scheduler.step()
+
+            if (epoch + 1) % self.params.eval_freq == 0:
+                LOG_TRAIN.info("Epoch {:04d} , average loss {:.4f} , epoch_time {:.4f}\n".format(
+                    epoch + 1, sum(epoch_loss) / len(epoch_loss), time.time() - t))
+                self.model.eval()
+                with torch.no_grad():
+                    val_metrics = self.corpus.get_validation_pred(self.model, 'test')
+                if val_metrics['Mean Reciprocal Rank'] > best_test_metrics['Mean Reciprocal Rank']:
+                    best_test_metrics['Mean Reciprocal Rank'] = val_metrics['Mean Reciprocal Rank']
+                if val_metrics['Mean Rank'] < best_test_metrics['Mean Rank']:
+                    best_test_metrics['Mean Rank'] = val_metrics['Mean Rank']
+                if val_metrics['Hits@1'] > best_test_metrics['Hits@1']:
+                    best_test_metrics['Hits@1'] = val_metrics['Hits@1']
+                if val_metrics['Hits@3'] > best_test_metrics['Hits@3']:
+                    best_test_metrics['Hits@3'] = val_metrics['Hits@3']
+                if val_metrics['Hits@10'] > best_test_metrics['Hits@10']:
+                    best_test_metrics['Hits@10'] = val_metrics['Hits@10']
+                if val_metrics['Hits@100'] > best_test_metrics['Hits@100']:
+                    best_test_metrics['Hits@100'] = val_metrics['Hits@100']
+                LOG_TRAIN.info(' '.join(['Epoch: {:04d}'.format(epoch + 1),
+                                         self.format_metrics(val_metrics, 'test')]))
+        LOG_TRAIN.info('Optimization Finished!')
+        if not best_test_metrics:
+            self.model.eval()
+            with torch.no_grad():
+                best_test_metrics = self.corpus.get_validation_pred(self.model, 'test')
+        LOG_TRAIN.info(' '.join(['Val set results:',
+                                 self.format_metrics(best_val_metrics, 'val')]))
+        LOG_TRAIN.info(' '.join(['Test set results:',
+                                 self.format_metrics(best_test_metrics, 'test')]))

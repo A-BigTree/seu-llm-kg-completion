@@ -31,7 +31,7 @@ DATASETS_TYPE: list = CONFIG["datasets"]["types"]
 # OpenAI GPT config
 GPT_URL: str = CONFIG["gpt"]["api-url"]
 GPT_API_KEY: str = CONFIG["gpt"]["api-key"]
-GPT_PROXIES: dict | None = CONFIG["gpt"]["proxy"]
+GPT_PROXIES: dict = CONFIG["gpt"]["proxy"]
 GPT_MODEL: str = CONFIG["gpt"]["model"]
 GPT_PROMPT: str = CONFIG["gpt"]["prompt"]
 RELATION_EXAMPLE_NUM: int = CONFIG["gpt"]["relation-example-num"]
@@ -39,3 +39,11 @@ GPT_REQUEST_TIMEOUT: int = CONFIG["gpt"]["request-timeout"]
 GPT_REQUEST_THREAD: int = CONFIG["gpt"]["request-thread"]
 # Train config
 TRAIN_CONFIG: dict = CONFIG["training"]
+# text embedding config
+TEXT_EMBEDDING_DATA_DIR: str = CONFIG["text-embedding"]["data-dir"]
+TEXT_EMBEDDING_SAVE_DIR: str = CONFIG["text-embedding"]["save-dir"]
+TEXT_EMBEDDING_DATASET: str = CONFIG["text-embedding"]["dataset"]
+TEXT_EMBEDDING_MODEL: str = CONFIG["text-embedding"]["model"]
+TEXT_EMBEDDING_TOKENIZER: str = CONFIG["text-embedding"]["tokenizer"]
+TEXT_EMBEDDING_MAX_LENGTH: int = CONFIG["text-embedding"]["max-length"]
+

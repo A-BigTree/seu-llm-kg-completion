@@ -11,5 +11,7 @@ if __name__ == '__main__':
     # task = SolrInitTask()
     # task = GATTrainTask()
     # task = PreProcessTask()
-    task = GPTRequestTask()
+    # task = GPTRequestTask()
+    # task = TextEmbeddingTask()
+    task = MFTrainTask()
     task.run_task()

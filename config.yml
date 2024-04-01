@@ -50,20 +50,30 @@ gpt:
   request-thread: 0
   request-timeout: 20
 
+# Text embedding configuration
+text-embedding:
+  data-dir: ./data/pre/
+  save-dir: ./data/models/
+  dataset: FB15K-237
+  model: ./data/models/bert/
+  tokenizer: ./data/models/bert/
+  max-length: 512
+
 
 # Training configuration
 training:
   data_dir: ./datasets/
-  dataset: FB15k-237
+  dataset: FB15K-237
   save: True
   save_dir: ./data/models/
-  cuda: 0
-  model: GAT
-  epochs: 3000
-  batch_size: 128
+  cuda: 1
+  model: MF
+  epochs: 1000
+  batch_size: 7000
+  text_features: True
   lr: 0.0005
   dropout: 0.3
-  weight_decay: 0.00001
+  weight_decay: 0
   seed: 10010
   num_layer: 3
   dim: 256
@@ -72,7 +82,7 @@ training:
   k_h: 20
   n_heads: 2
   pre_trained: False
-  encoder: False
+  encoder: True
   patience: 5
   eval_freq: 10
   lr_reduce_freq: 500

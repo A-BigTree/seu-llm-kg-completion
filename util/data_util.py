@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 import torch
 
@@ -138,7 +140,7 @@ class ConvECorpus(Corpus):
             head_batch_indices = torch.LongTensor([indices['triple'] for indices in head_batch])
             head_batch_indices = head_batch_indices.to(self.device)
             pred = model.forward(head_batch_indices)
-            pred = (pred[0] + pred[1] + pred[2] + pred[3]) / 4.0
+            pred = (pred[0] + pred[1] + pred[2]) / 3.0
             label = [np.int32(indices['label']) for indices in head_batch]
             y = np.zeros((len(head_batch), len(self.entity2id)), dtype=np.float32)
             for idx in range(len(label)):
@@ -166,7 +168,7 @@ class ConvECorpus(Corpus):
             tail_batch_indices = torch.LongTensor([indices['triple'] for indices in tail_batch])
             tail_batch_indices = tail_batch_indices.to(self.device)
             pred = model.forward(tail_batch_indices)
-            pred = (pred[0] + pred[1] + pred[2] + pred[3]) / 4.0
+            pred = (pred[0] + pred[1] + pred[2]) / 3.0
             label = [np.int32(indice['label']) for indice in tail_batch]
             y = np.zeros((len(tail_batch), len(self.entity2id)), dtype=np.float32)
             for idx in range(len(label)):
@@ -311,8 +313,9 @@ class ConvKBCorpus(Corpus):
                 current_index = last_index * (self.neg_num // 2) + i * (self.neg_num // 2) + j
 
                 while (
-                self.batch_indices[last_index + current_index, 0], self.batch_indices[last_index + current_index, 1],
-                random_entities[current_index]) in self.all_triples.keys():
+                        self.batch_indices[last_index + current_index, 0],
+                        self.batch_indices[last_index + current_index, 1],
+                        random_entities[current_index]) in self.all_triples.keys():
                     random_entities[current_index] = np.random.randint(0, len(self.entity2id))
 
                 self.batch_indices[last_index + current_index, 2] = random_entities[current_index]
@@ -480,10 +483,13 @@ def load_data(path, datasets):
     test_triples, test_adj, test_unique_entities = get_adj(path, 'test')
     entity2id = read_entity_from_id(path)
     relation2id = read_relation_from_id(path)
-    # img_features = pickle.load(open(path+'img_features.pkl', 'rb'))
-    # text_features = pickle.load(open(path+'text_features.pkl', 'rb'))
 
-    return entity2id, relation2id, None, None, \
+    return entity2id, relation2id, \
         (train_triples, train_adj, train_unique_entities), \
         (val_triples, val_adj, val_unique_entities), \
         (test_triples, test_adj, test_unique_entities)
+
+
+def load_text_data(path, dataset):
+    path = path + dataset + '/'
+    return pickle.load(open(path + 'text_embedding.pkl', 'rb'))
