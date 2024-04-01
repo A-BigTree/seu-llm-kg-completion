@@ -47,7 +47,7 @@ gpt:
   model: gpt-3.5-turbo-0125
   prompt: "Generate 20 brief natural language descriptions(less than 10 words) for the KG triplet (%s,,%s) with the '%s' replaced as <H> and the '%s' as <T>"
   relation-example-num: 3
-  request-thread: 20
+  request-thread: 0
   request-timeout: 20
 
 

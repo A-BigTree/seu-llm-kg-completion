@@ -427,7 +427,7 @@ class ConvKBCorpus(Corpus):
         return metrics
 
 
-def read_entity_from_id(path):
+def read_entity_from_id(path) -> dict:
     entity2id = {}
     with open(path + 'entity2id.txt', 'r', encoding="utf-8") as f:
         for line in f:
@@ -440,7 +440,7 @@ def read_entity_from_id(path):
     return entity2id
 
 
-def read_relation_from_id(path):
+def read_relation_from_id(path) -> dict:
     relation2id = {}
     with open(path + 'relation2id.txt', 'r', encoding="utf-8") as f:
         for line in f:

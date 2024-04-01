@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import string
 from queue import Empty
@@ -158,7 +159,7 @@ class GPTRequestTask(MultiThreadRequest):
         super().__init__(name_="GPT Request Task",
                          input_=False,
                          queue_size=GPT_REQUEST_THREAD,
-                         produce_thread=1,
+                         produce_thread=0,
                          consumer_thread=GPT_REQUEST_THREAD)
         self.url = GPT_URL
         self.api_key = GPT_API_KEY
@@ -235,7 +236,7 @@ class GPTRequestTask(MultiThreadRequest):
                     continue
                 response_json = response.json()
                 result = response_json["choices"][0]["message"]["content"]
-                with open(self.path + dataset + f"/txt/min/{relation}_{index}_relation.txt", "w", encoding="utf-8") as f:
+                with open(self.path + dataset + f"/txt/{relation}_{index}_relation.txt", "w", encoding="utf-8") as f:
                     f.write(result + "\n")
             except Exception as e:
                 print(e)
@@ -248,14 +249,36 @@ class GPTRequestTask(MultiThreadRequest):
             dataset, relation, num = self.result_queue.get()
             result = []
             for i in range(num):
-                with open(self.path + dataset + f"/txt/min/{relation}_{i}_relation.txt", "r", encoding="utf-8") as f:
+                with open(self.path + dataset + f"/txt/{relation}_{i}_relation.txt", "r", encoding="utf-8") as f:
                     for line in f.readlines():
                         line = line.strip(" |\n|.").strip(string.digits).strip(" |\n|.")
                         if line == "":
                             continue
                         result.append(line + "\n")
-            with open(self.path + dataset + f"/txt/min/{relation}_all_relation.txt", "w", encoding="utf-8") as f:
+            with open(self.path + dataset + f"/txt/{relation}_all_relation.txt", "w", encoding="utf-8") as f:
                 f.writelines(result)
+        for dataset in self.datasets:
+            path = self.path + dataset + "/"
+            files = []
+            for filename in os.listdir(path + "txt"):
+                if filename.endswith(".txt"):
+                    files.append(filename)
+            LOG_TASK.info(files)
+            relation = read_relation_from_id(path)
+            for _, value in relation.items():
+                with open(path + f"txt/all/{value}_relation.txt", "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                result = []
+                for line in lines:
+                    if line == "":
+                        continue
+                    if line.find("<H>") != -1 and line.find("<T>") != -1:
+                        result.append(line)
+                result.sort(key=lambda x: len(x))
+                if len(result) < 7:
+                    LOG_TASK.warn(f"{dataset}:Relation {value} is too small, num is {len(result)}.")
+                with open(path + f"txt/post/{value}_relation.txt", "w", encoding="utf-8") as f:
+                    f.writelines(result)
 
 
 class SolrRecallTask(BaseModel):

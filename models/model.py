@@ -43,7 +43,7 @@ class GAT(nn.Module):
 
     def forward(self, adj, train_indices):
         edge_list = adj[0]
-        if CUDA:
+        if TRAIN_CONFIG["cuda"] is not None and TRAIN_CONFIG["cuda"] >= 0:
             edge_list = edge_list.to(self.device)
 
         self.entity_embeddings.data = F.normalize(
@@ -143,6 +143,7 @@ class MultimodalFusionModule(nn.Module):
         r_embed = self.relation_embeddings(relation)
         e_txt_embed = self.txt_entity_embeddings(head)
         r_txt_embed = self.txt_relation_embeddings(relation)
+
         e_mm_embed = self.Mutan_MM_E(e_embed, e_txt_embed)
         r_mm_embed = self.Mutan_MM_R(r_embed, r_txt_embed)
 
