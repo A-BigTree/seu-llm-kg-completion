@@ -35,8 +35,10 @@ class BaseTrainTask(BaseModel):
         else:
             self.corpus = ConvKBCorpus(self.params, train_data, val_data, test_data, entity2id, relation2id)
         if self.params.text_features:
-            text_features = load_text_data(TEXT_EMBEDDING_SAVE_DIR, self.params.dataset)
+            text_features = load_text_data(TEXT_EMBEDDING_SAVE_DIR, self.params.dataset, "entity_text_embedding.pkl")
             self.params.desp = F.normalize(torch.Tensor(text_features), p=2, dim=1)
+            text_r_features = load_text_data(TEXT_EMBEDDING_SAVE_DIR, self.params.dataset, "relation_text_embedding.pkl")
+            self.params.relation_desp = F.normalize(torch.Tensor(text_r_features), p=2, dim=1)
         self.params.entity2id = entity2id
         self.params.relation2id = relation2id
 
@@ -131,18 +133,20 @@ class GATTrainTask(BaseTrainTask):
 class TextEmbeddingTask(BaseModel):
     def __init__(self):
         super().__init__("Text Embedding Task", input_=False)
-        self.model = BertModel.from_pretrained(TEXT_EMBEDDING_MODEL)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = BertModel.from_pretrained(TEXT_EMBEDDING_MODEL).to(self.device)
         self.tokenizer = BertTokenizer.from_pretrained(TEXT_EMBEDDING_TOKENIZER)
         self.max_length = TEXT_EMBEDDING_MAX_LENGTH
         self.data_dir = TEXT_EMBEDDING_DATA_DIR
         self.save_dir = TEXT_EMBEDDING_SAVE_DIR
         self.dataset = TEXT_EMBEDDING_DATASET
-        self.text_embedding = []
+        self.entity_embedding = []
+        self.relation_embedding = []
 
-    def exec_process(self, *args, **kwargs):
-        self.text_embedding = []
+    def generate_text_embedding(self, text_file):
+        result = []
         text = []
-        with open(f"{self.data_dir}{self.dataset}/txt/entity_description.txt", "r", encoding="utf-8") as f:
+        with open(f"{self.data_dir}{self.dataset}/{text_file}", "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -150,15 +154,25 @@ class TextEmbeddingTask(BaseModel):
         for line in tqdm(text):
             tokens = self.tokenizer.encode(line, add_special_tokens=True,
                                            max_length=self.max_length, truncation=True,
-                                           return_tensors='pt')
+                                           return_tensors='pt').to(self.device)
             with torch.no_grad():
                 outputs = self.model(tokens)
                 pooled_output = outputs[1]
-            self.text_embedding.append(pooled_output.numpy())
+            result.append(pooled_output.cpu().numpy())
+        return result
+
+    def exec_process(self, *args, **kwargs):
+        self.entity_embedding = []
+        LOG_TRAIN.info("Generating entity text embedding...")
+        self.entity_embedding = self.generate_text_embedding("entity_text.txt")
+        LOG_TRAIN.info("Generating relation text embedding...")
+        self.relation_embedding = self.generate_text_embedding("relation_text.txt")
 
     def exec_output(self):
-        with open(f"{self.save_dir}{self.dataset}/text_embedding.pkl", "wb") as f:
-            pickle.dump(self.text_embedding, f)
+        with open(f"{self.save_dir}{self.dataset}/entity_text_embedding.pkl", "wb") as f:
+            pickle.dump(self.entity_embedding, f)
+        with open(f"{self.save_dir}{self.dataset}/relation_text_embedding.pkl", "wb") as f:
+            pickle.dump(self.relation_embedding, f)
 
 
 class MFTrainTask(BaseTrainTask):
@@ -213,7 +227,7 @@ class MFTrainTask(BaseTrainTask):
             lr_scheduler.step()
 
             if (epoch + 1) % self.params.eval_freq == 0:
-                LOG_TRAIN.info("Epoch {:04d} , average loss {:.4f} , epoch_time {:.4f}\n".format(
+                LOG_TRAIN.info("Epoch {:04d} , average loss {:.4f} , epoch_time {:.4f}".format(
                     epoch + 1, sum(epoch_loss) / len(epoch_loss), time.time() - t))
                 self.model.eval()
                 with torch.no_grad():
@@ -231,7 +245,7 @@ class MFTrainTask(BaseTrainTask):
                 if val_metrics['Hits@100'] > best_test_metrics['Hits@100']:
                     best_test_metrics['Hits@100'] = val_metrics['Hits@100']
                 LOG_TRAIN.info(' '.join(['Epoch: {:04d}'.format(epoch + 1),
-                                         self.format_metrics(val_metrics, 'test')]))
+                                         self.format_metrics(val_metrics, 'test')]) + "\n")
         LOG_TRAIN.info('Optimization Finished!')
         if not best_test_metrics:
             self.model.eval()

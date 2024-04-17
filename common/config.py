@@ -1,5 +1,6 @@
 import yaml
 import logging
+import datetime
 
 with open("./config.yml", "r", encoding="utf-8") as file:
     CONFIG = yaml.load(file.read(), Loader=yaml.FullLoader)
@@ -47,3 +48,8 @@ TEXT_EMBEDDING_MODEL: str = CONFIG["text-embedding"]["model"]
 TEXT_EMBEDDING_TOKENIZER: str = CONFIG["text-embedding"]["tokenizer"]
 TEXT_EMBEDDING_MAX_LENGTH: int = CONFIG["text-embedding"]["max-length"]
 
+if CONFIG["tasks"]["model-train"]:
+    formatter = logging.Formatter(LOGGING_CONFIG["format"])
+    file_handler = logging.FileHandler(f"./data/record/{datetime.date.today()}-{TRAIN_CONFIG['model']}-{TRAIN_CONFIG['dataset']}.txt")
+    file_handler.setFormatter(formatter)
+    LOG_TRAIN.addHandler(file_handler)

@@ -54,7 +54,7 @@ gpt:
 text-embedding:
   data-dir: ./data/pre/
   save-dir: ./data/models/
-  dataset: FB15K-237
+  dataset: DB15K
   model: ./data/models/bert/
   tokenizer: ./data/models/bert/
   max-length: 512
@@ -63,10 +63,10 @@ text-embedding:
 # Training configuration
 training:
   data_dir: ./datasets/
-  dataset: FB15K-237
+  dataset: DB15K
   save: True
   save_dir: ./data/models/
-  cuda: 1
+  cuda: 0
   model: MF
   epochs: 1000
   batch_size: 7000
@@ -94,6 +94,4 @@ training:
   kernel_size: 3
 
 tasks:
-  solr-init: False
-  data-init: False
-  model-train: False
+  model-train: True

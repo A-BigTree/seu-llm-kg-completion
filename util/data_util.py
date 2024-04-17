@@ -490,6 +490,6 @@ def load_data(path, datasets):
         (test_triples, test_adj, test_unique_entities)
 
 
-def load_text_data(path, dataset):
+def load_text_data(path, dataset, file):
     path = path + dataset + '/'
-    return pickle.load(open(path + 'text_embedding.pkl', 'rb'))
+    return pickle.load(open(path + file, 'rb'))

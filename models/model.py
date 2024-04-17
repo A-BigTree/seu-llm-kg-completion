@@ -107,10 +107,15 @@ class MultimodalFusionModule(nn.Module):
                     pickle.load(open(args.save_dir + args.dataset + '/gat_relation_vec.pkl', 'rb'))).float()), dim=0),
                 freeze=False)
 
+        # relation_desp_tensor = torch.tensor(args.relation_desp).to(self.device)
+        # self.txt_relation_embeddings = nn.Embedding.from_pretrained(relation_desp_tensor, freeze=False)
+        # self.txt_relation_embeddings.weight.requires_grad = False
+
         txt_pool = torch.nn.AdaptiveAvgPool2d(output_size=(4, 64))
         txt = txt_pool(args.desp.to(self.device).view(-1, 12, 64))
         txt = txt.view(txt.size(0), -1)
         self.txt_entity_embeddings = nn.Embedding.from_pretrained(txt, freeze=False)
+
         self.txt_relation_embeddings = nn.Embedding(2 * len(args.relation2id), args.r_dim, padding_idx=None)
         nn.init.xavier_normal_(self.txt_relation_embeddings.weight)
 
