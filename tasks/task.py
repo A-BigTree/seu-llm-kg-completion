@@ -257,28 +257,6 @@ class GPTRequestTask(MultiThreadRequest):
                         result.append(line + "\n")
             with open(self.path + dataset + f"/txt/{relation}_all_relation.txt", "w", encoding="utf-8") as f:
                 f.writelines(result)
-        for dataset in self.datasets:
-            path = self.path + dataset + "/"
-            files = []
-            for filename in os.listdir(path + "txt"):
-                if filename.endswith(".txt"):
-                    files.append(filename)
-            LOG_TASK.info(files)
-            relation = read_relation_from_id(path)
-            for _, value in relation.items():
-                with open(path + f"txt/all/{value}_relation.txt", "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                result = []
-                for line in lines:
-                    if line == "":
-                        continue
-                    if line.find("<H>") != -1 and line.find("<T>") != -1:
-                        result.append(line)
-                result.sort(key=lambda x: len(x))
-                if len(result) < 7:
-                    LOG_TASK.warn(f"{dataset}:Relation {value} is too small, num is {len(result)}.")
-                with open(path + f"txt/post/{value}_relation.txt", "w", encoding="utf-8") as f:
-                    f.writelines(result)
 
 
 class SolrRecallTask(BaseModel):
