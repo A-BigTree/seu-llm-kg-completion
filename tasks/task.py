@@ -161,7 +161,7 @@ class GPTRequestTask(MultiThreadRequest):
         super().__init__(name_="GPT Request Task",
                          input_=False,
                          queue_size=GPT_REQUEST_THREAD,
-                         produce_thread=0,
+                         produce_thread=1,
                          consumer_thread=GPT_REQUEST_THREAD)
         self.url = GPT_URL
         self.api_key = GPT_API_KEY
@@ -263,7 +263,7 @@ class GPTRequestTask(MultiThreadRequest):
 
 class PostProcessTask(BaseModel):
     def __init__(self, dataset="DB15K"):
-        super().__init__(name_="Pre Process Task",
+        super().__init__(name_="Post Process Task",
                          input_=True,
                          output_=False,
                          cost_time=True)

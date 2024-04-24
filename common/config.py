@@ -50,6 +50,7 @@ TEXT_EMBEDDING_MAX_LENGTH: int = CONFIG["text-embedding"]["max-length"]
 
 if CONFIG["tasks"]["model-train"]:
     formatter = logging.Formatter(LOGGING_CONFIG["format"])
-    file_handler = logging.FileHandler(f"./data/record/{datetime.date.today()}-{TRAIN_CONFIG['model']}-{TRAIN_CONFIG['dataset']}.txt")
+    file_handler = logging.FileHandler(
+        f"./data/record/{datetime.date.today()}-{TRAIN_CONFIG['model']}-{TRAIN_CONFIG['epochs']}-{TRAIN_CONFIG['dataset']}.txt")
     file_handler.setFormatter(formatter)
     LOG_TRAIN.addHandler(file_handler)

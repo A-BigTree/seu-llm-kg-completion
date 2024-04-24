@@ -251,7 +251,5 @@ class MFTrainTask(BaseTrainTask):
             self.model.eval()
             with torch.no_grad():
                 best_test_metrics = self.corpus.get_validation_pred(self.model, 'test')
-        LOG_TRAIN.info(' '.join(['Val set results:',
-                                 self.format_metrics(best_val_metrics, 'val')]))
         LOG_TRAIN.info(' '.join(['Test set results:',
                                  self.format_metrics(best_test_metrics, 'test')]))

@@ -34,10 +34,10 @@ solr:
 datasets:
   path: ./data/pre/
   types:
-    - DB15K
+    # - DB15K
     # - FB15K
     # - FB15K-237
-    # - YAGO15K
+    - YAGO15K
 
 # OpenAI GPT configuration
 gpt:
@@ -47,14 +47,14 @@ gpt:
   model: gpt-3.5-turbo-0125
   prompt: "Generate 20 brief natural language descriptions(less than 10 words) for the KG triplet (%s,,%s) with the '%s' replaced as <H> and the '%s' as <T>"
   relation-example-num: 3
-  request-thread: 0
+  request-thread: 10
   request-timeout: 20
 
 # Text embedding configuration
 text-embedding:
   data-dir: ./data/pre/
   save-dir: ./data/models/
-  dataset: DB15K
+  dataset: FB15K-237
   model: ./data/models/bert/
   tokenizer: ./data/models/bert/
   max-length: 512
@@ -63,12 +63,12 @@ text-embedding:
 # Training configuration
 training:
   data_dir: ./datasets/
-  dataset: DB15K
+  dataset: FB15K-237
   save: True
   save_dir: ./data/models/
   cuda: 0
   model: MF
-  epochs: 1000
+  epochs: 3000
   batch_size: 7000
   text_features: True
   lr: 0.0005
